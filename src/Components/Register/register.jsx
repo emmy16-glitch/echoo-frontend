@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "./register.css";
 import "./login-redesign.css";
 import api from "../../services/api";
