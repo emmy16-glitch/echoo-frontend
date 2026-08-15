@@ -9,10 +9,11 @@ import {
   FaArrowRight,
   FaBroadcastTower,
   FaChartLine,
-  FaCircleExclamation,
+  FaExclamationCircle,
   FaEye,
   FaEyeSlash,
   FaHeadphones,
+  FaLock,
   FaQuestionCircle,
   FaUser,
   FaUsers,
@@ -576,7 +577,7 @@ const Register = ({
                     loginError ? "has-error" : ""
                   }`}
                 >
-                  <FaHeadphones
+                  <FaLock
                     className="echoo-login-input-icon"
                     aria-hidden="true"
                   />
@@ -617,7 +618,7 @@ const Register = ({
                     role="alert"
                     aria-live="polite"
                   >
-                    <FaCircleExclamation aria-hidden="true" />
+                    <FaExclamationCircle aria-hidden="true" />
                     <span>{loginError}</span>
                   </p>
                 )}
