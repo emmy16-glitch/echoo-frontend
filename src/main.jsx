@@ -11,15 +11,9 @@ import "./styles/echoo-mock-media.css";
 import "./styles/echoo-home-final-fill.css";
 import "./styles/echoo-library-media-final.css";
 import "./styles/echoo-batch1-integration.css";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <a
-      className="echoo-skip-link"
-      href="#echoo-main-content"
-    >
-      Skip to main content
-    </a>
-
     <AppErrorBoundary>
       <App />
     </AppErrorBoundary>
