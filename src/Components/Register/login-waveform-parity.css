@@ -2,8 +2,38 @@
   height: 176px;
 }
 
-.echoo-audio-wave-canvas {
-  filter: saturate(1.06);
+.echoo-login-wave-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+  pointer-events: none;
+}
+
+.echoo-login-wave-bars > span {
+  flex: 1 1 auto;
+  min-width: 3px;
+  height: var(--bar);
+  max-height: 78%;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(103, 164, 244, 0.82),
+    rgba(19, 107, 213, 0.52)
+  );
+  transform-origin: center;
+  will-change: transform, opacity;
+  box-shadow: 0 0 10px rgba(19, 107, 213, 0.025);
+}
+
+.echoo-audio-preview.is-active .echoo-login-wave-bars > span {
+  background: linear-gradient(
+    180deg,
+    rgba(91, 157, 244, 0.96),
+    rgba(19, 107, 213, 0.72)
+  );
 }
 
 .echoo-mic-preview-button {
@@ -18,7 +48,9 @@
 
 .echoo-audio-preview-meter span {
   opacity: 0.82;
-  animation-duration: 1.15s;
+  animation: none !important;
+  transform-origin: center bottom;
+  will-change: transform;
 }
 
 .echoo-audio-preview-status {
@@ -48,6 +80,10 @@
   .echoo-audio-preview-stage {
     height: 150px;
   }
+
+  .echoo-login-wave-bars {
+    gap: 3px;
+  }
 }
 
 @media (max-width: 640px), (pointer: coarse) and (max-width: 760px) {
@@ -69,6 +105,16 @@
 
   .echoo-audio-preview-stage {
     height: 104px;
+  }
+
+  .echoo-login-wave-bars {
+    gap: 2px;
+    padding: 0;
+  }
+
+  .echoo-login-wave-bars > span {
+    min-width: 2px;
+    max-height: 82%;
   }
 
   .echoo-mic-preview-button {
@@ -126,5 +172,12 @@
   .echoo-mic-preview-button {
     width: 58px;
     height: 58px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echoo-login-wave-bars > span,
+  .echoo-audio-preview-meter span {
+    transition: none !important;
   }
 }
