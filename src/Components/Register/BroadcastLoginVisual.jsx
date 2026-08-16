@@ -5,8 +5,9 @@ import {
   FaSlidersH,
   FaWaveSquare,
 } from "react-icons/fa";
+import "./login-waveform-parity.css";
 
-const BAR_COUNT = 72;
+const BAR_COUNT = 44;
 
 const stopStream = (stream) => {
   stream?.getTracks?.().forEach((track) => track.stop());
@@ -32,8 +33,7 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
     const reducedMotion = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches;
-    const values = new Uint8Array(2048);
-    let tick = 0;
+    const frequencyData = new Uint8Array(128);
     let levelEnvelope = 0;
 
     const resize = () => {
@@ -44,7 +44,7 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
-    const draw = () => {
+    const draw = (time = 0) => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const centerY = height / 2;
@@ -52,103 +52,98 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
 
       ctx.clearRect(0, 0, width, height);
 
-      const glow = ctx.createLinearGradient(0, 0, width, 0);
-      glow.addColorStop(0, "rgba(72, 132, 235, 0.08)");
-      glow.addColorStop(0.18, "rgba(76, 139, 239, 0.28)");
-      glow.addColorStop(0.5, "rgba(23, 105, 211, 0.76)");
-      glow.addColorStop(0.82, "rgba(76, 139, 239, 0.28)");
-      glow.addColorStop(1, "rgba(72, 132, 235, 0.08)");
-
-      ctx.strokeStyle = "rgba(90, 146, 244, 0.15)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, centerY);
-      ctx.lineTo(width, centerY);
-      ctx.stroke();
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, "rgba(107, 167, 244, 0.58)");
+      gradient.addColorStop(0.2, "rgba(92, 157, 241, 0.84)");
+      gradient.addColorStop(0.5, "rgba(23, 105, 211, 0.98)");
+      gradient.addColorStop(0.8, "rgba(92, 157, 241, 0.84)");
+      gradient.addColorStop(1, "rgba(107, 167, 244, 0.58)");
 
       if (analyser) {
-        analyser.getByteTimeDomainData(values);
-
-        let sum = 0;
-        for (let i = 0; i < values.length; i += 1) {
-          const sample = (values[i] - 128) / 128;
-          sum += sample * sample;
+        analyser.getByteFrequencyData(frequencyData);
+        let total = 0;
+        for (let i = 0; i < frequencyData.length; i += 1) {
+          total += frequencyData[i] / 255;
         }
-
-        const rms = Math.sqrt(sum / values.length);
-        levelEnvelope = levelEnvelope * 0.76 + rms * 0.24;
+        const average = total / frequencyData.length;
+        levelEnvelope = levelEnvelope * 0.72 + average * 0.28;
       } else {
         levelEnvelope *= 0.9;
       }
 
-      const gap = width < 430 ? 2.4 : 3.4;
+      const gap = width < 430 ? 3.2 : 4.4;
       const barWidth = Math.max(
-        1.8,
+        width < 430 ? 4.5 : 6,
         (width - gap * (BAR_COUNT - 1)) / BAR_COUNT
       );
-      const maxHeight = height * 0.76;
-      const hoverBoost = hoverRef.current ? 1.06 : 1;
+      const maxHeight = height * 0.88;
+      const hoverBoost = hoverRef.current ? 1.05 : 1;
 
       for (let i = 0; i < BAR_COUNT; i += 1) {
         const x = i * (barWidth + gap);
+        const edgeFade = Math.sin(((i + 1) / (BAR_COUNT + 1)) * Math.PI);
         let amplitude;
 
         if (analyser) {
-          const start = Math.floor((i / BAR_COUNT) * values.length);
-          const end = Math.min(
-            values.length,
-            start + Math.max(3, Math.floor(values.length / BAR_COUNT))
+          const bucket = Math.min(
+            frequencyData.length - 1,
+            Math.floor((i / BAR_COUNT) * frequencyData.length)
           );
-
-          let local = 0;
-          for (let j = start; j < end; j += 1) {
-            local += Math.abs(values[j] - 128) / 128;
-          }
-          local /= Math.max(1, end - start);
-
-          amplitude =
-            0.07 +
-            Math.min(0.9, local * 3.4 + levelEnvelope * 4.8);
+          const level = frequencyData[bucket] / 255;
+          const neighbour =
+            frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
+          const energy = Math.min(
+            1,
+            level * 0.7 + neighbour * 0.3 + levelEnvelope * 0.55
+          );
+          amplitude = 0.22 + energy * 0.95;
         } else if (reducedMotion) {
-          amplitude = 0.13 + (Math.sin(i * 0.42) + 1) * 0.025;
+          amplitude = 0.48 + Math.sin(i * 0.44) * 0.08;
         } else {
-          const waveA = Math.sin(tick * 0.018 + i * 0.38);
-          const waveB = Math.sin(tick * 0.011 - i * 0.17);
-          amplitude = 0.09 + Math.abs(waveA) * 0.075 + Math.abs(waveB) * 0.03;
+          const waveA = Math.sin(time * 0.0042 + i * 0.43);
+          const waveB = Math.sin(time * 0.0026 - i * 0.21);
+          const waveC = Math.sin(time * 0.0015 + i * 0.11);
+          amplitude =
+            0.34 +
+            Math.abs(waveA) * 0.42 +
+            Math.abs(waveB) * 0.2 +
+            Math.abs(waveC) * 0.1;
         }
 
-        const edgeFade = Math.sin(((i + 1) / (BAR_COUNT + 1)) * Math.PI);
+        const shape = 0.72 + edgeFade * 0.28;
         const barHeight = Math.max(
-          3,
-          Math.min(
-            maxHeight,
-            maxHeight * amplitude * (0.48 + edgeFade * 0.52) * hoverBoost
-          )
+          12,
+          Math.min(maxHeight, maxHeight * amplitude * shape * hoverBoost)
         );
         const y = centerY - barHeight / 2;
 
-        ctx.fillStyle = glow;
+        ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, Math.min(barWidth / 2, 4));
+        ctx.roundRect(
+          x,
+          y,
+          barWidth,
+          barHeight,
+          Math.min(barWidth / 2, 7)
+        );
         ctx.fill();
       }
 
-      tick += 1;
-      rafRef.current = requestAnimationFrame(draw);
+      rafRef.current = window.requestAnimationFrame(draw);
     };
 
     resize();
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);
-    rafRef.current = requestAnimationFrame(draw);
+    rafRef.current = window.requestAnimationFrame(draw);
 
     return () => {
       resizeObserver.disconnect();
-      cancelAnimationFrame(rafRef.current);
+      window.cancelAnimationFrame(rafRef.current);
       stopStream(streamRef.current);
       streamRef.current = null;
       analyserRef.current = null;
-      audioContextRef.current?.close?.();
+      audioContextRef.current?.close?.().catch?.(() => {});
       audioContextRef.current = null;
     };
   }, []);
@@ -193,14 +188,19 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
       });
 
       const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        stopStream(stream);
+        throw new Error("AudioContext unavailable");
+      }
+
       const audioContext = new AudioContext();
       if (audioContext.state === "suspended") {
         await audioContext.resume();
       }
 
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 2048;
-      analyser.smoothingTimeConstant = 0.62;
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.68;
 
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
@@ -215,8 +215,14 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
       stopStream(streamRef.current);
       streamRef.current = null;
       analyserRef.current = null;
+      audioContextRef.current?.close?.().catch?.(() => {});
+      audioContextRef.current = null;
       setMicState(error?.name === "NotAllowedError" ? "denied" : "unavailable");
-      setMessage("Microphone unavailable — you can still sign in");
+      setMessage(
+        error?.name === "NotAllowedError"
+          ? "Microphone permission was not granted"
+          : "Microphone unavailable — you can still sign in"
+      );
     }
   };
 
@@ -225,7 +231,9 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
       ? "MIC ACTIVE"
       : micState === "requesting"
       ? "REQUESTING"
-      : micState === "denied" || micState === "unavailable"
+      : micState === "denied"
+      ? "MIC BLOCKED"
+      : micState === "unavailable"
       ? "MIC UNAVAILABLE"
       : "MIC PREVIEW";
 
