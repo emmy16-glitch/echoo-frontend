@@ -1,26 +1,22 @@
 import { useState } from "react";
 import "./register.css";
-import "./login-redesign.css";
+import "./broadcast-login.css";
 import api from "../../services/api";
 
 import {
   FaApple,
   FaArrowLeft,
   FaArrowRight,
-  FaBroadcastTower,
-  FaChartLine,
   FaExclamationCircle,
   FaEye,
   FaEyeSlash,
-  FaHeadphones,
   FaLock,
-  FaQuestionCircle,
   FaUser,
-  FaUsers,
 } from "react-icons/fa";
 
 import { FcGoogle } from "react-icons/fc";
 import EchooLogoImage from "../Assets/Echoo_logo.jpeg";
+import BroadcastLoginVisual from "./BroadcastLoginVisual";
 
 import LoadingButton from "../UI/LoadingButton";
 import SuccessState from "../UI/SuccessState";
@@ -29,89 +25,6 @@ import Toast from "../UI/Toast";
 
 import "../../styles/echoo-onboarding.css";
 import EchoAmbient from "../EchooSystem/EchoAmbient";
-
-const waveformBars = [
-  9, 16, 23, 12, 28, 18, 32, 14, 26, 20, 35, 17, 29, 13,
-  24, 19, 31, 15, 27, 11, 22, 16, 30, 18, 25, 13, 21, 16,
-  28, 14, 23, 18, 32, 12, 26, 16, 29, 14, 20, 17, 25, 12,
-  22, 15, 28, 17, 24, 13, 19, 16, 26, 14, 21, 18, 29, 13,
-  24, 16, 20, 11,
-];
-
-const LoginBrand = ({ mobile = false }) => (
-  <div
-    className={
-      mobile
-        ? "echoo-login-mobile-brand"
-        : "echoo-login-brand"
-    }
-  >
-    <img
-      src={EchooLogoImage}
-      alt="Echoo"
-      className="echoo-login-brand-mark"
-    />
-
-    <div className="echoo-login-brand-copy">
-      <span className="echoo-login-brand-name">Echoo</span>
-      <span className="echoo-login-brand-subtitle">
-        Live Audio Platform
-      </span>
-    </div>
-  </div>
-);
-
-const LoginLiveCard = () => (
-  <div className="echoo-login-live-card" aria-hidden="true">
-    <div className="echoo-login-artwork">
-      <span className="echoo-login-artwork-title">
-        SUNSET
-        <br />
-        SESSIONS
-      </span>
-      <span className="echoo-login-artwork-volume">VOL. 7</span>
-    </div>
-
-    <div className="echoo-login-live-card-body">
-      <div className="echoo-login-live-meta">
-        <span className="echoo-login-live-badge">
-          <span className="echoo-login-live-dot" />
-          LIVE
-        </span>
-
-        <span className="echoo-login-listeners">
-          <FaUsers />
-          <strong>1,284</strong>
-          listening
-        </span>
-      </div>
-
-      <h2>Sunset Sessions Vol. 7</h2>
-      <p>with Joseph Okunlola</p>
-
-      <div className="echoo-login-waveform">
-        {waveformBars.map((height, index) => (
-          <span
-            key={`${height}-${index}`}
-            className="echoo-login-wave-bar"
-            style={{ height: `${height}px` }}
-          />
-        ))}
-      </div>
-
-      <div className="echoo-login-live-tags">
-        <span className="echoo-login-live-tag">
-          <FaHeadphones />
-          Chill / Downtempo
-        </span>
-        <span className="echoo-login-live-tag">
-          <FaUsers />
-          1.2K Followers
-        </span>
-      </div>
-    </div>
-  </div>
-);
 
 const Register = ({
   onAccountCreated,
@@ -434,112 +347,40 @@ const Register = ({
     };
 
     return (
-      <main className="echoo-login-page">
-        <section className="echoo-login-hero" aria-label="About Echoo">
-          <LoginBrand />
-
-          <div className="echoo-login-hero-copy">
-            <h1>
-              Your voice.
-              <br />
-              Your audience.
-              <br />
-              <span className="echoo-login-live-word">Live.</span>
-            </h1>
-
-            <p>
-              Broadcast live audio, build your community, and stay
-              connected with the conversations that matter.
-            </p>
-          </div>
-
-          <LoginLiveCard />
-
-          <div className="echoo-login-features" aria-hidden="true">
-            <div className="echoo-login-feature">
-              <div className="echoo-login-feature-icon">
-                <FaBroadcastTower />
-              </div>
-              <div>
-                <strong>Go live</strong>
-                <span>
-                  Reach listeners
-                  <br />
-                  in real time
-                </span>
-              </div>
-            </div>
-
-            <div className="echoo-login-feature">
-              <div className="echoo-login-feature-icon">
-                <FaUsers />
-              </div>
-              <div>
-                <strong>Grow your audience</strong>
-                <span>
-                  Build community
-                  <br />
-                  that engages
-                </span>
-              </div>
-            </div>
-
-            <div className="echoo-login-feature">
-              <div className="echoo-login-feature-icon">
-                <FaChartLine />
-              </div>
-              <div>
-                <strong>Track &amp; improve</strong>
-                <span>
-                  Insights to help
-                  <br />
-                  you grow
-                </span>
-              </div>
-            </div>
-          </div>
+      <main className="echoo-broadcast-login-page">
+        <section
+          className="echoo-broadcast-login-hero"
+          aria-label="Echoo live audio preview"
+        >
+          <BroadcastLoginVisual logoSrc={EchooLogoImage} />
         </section>
 
-        <section className="echoo-login-panel" aria-labelledby="echoo-login-title">
-          <button
-            type="button"
-            className="echoo-login-help"
-            onClick={() => {
-              setLoginError("");
-              setLoginNotice(
-                "The Help Center is not connected in this frontend yet."
-              );
-            }}
-          >
-            <FaQuestionCircle />
-            Help Center
-          </button>
-
-          <div className="echoo-login-form-wrap">
-            <LoginBrand mobile />
-
-            <header className="echoo-login-heading">
-              <h1 id="echoo-login-title">Welcome back</h1>
+        <section
+          className="echoo-broadcast-login-auth"
+          aria-labelledby="echoo-broadcast-login-title"
+        >
+          <div className="echoo-broadcast-form-card">
+            <header className="echoo-broadcast-form-heading">
+              <h1 id="echoo-broadcast-login-title">Welcome back</h1>
               <p>Sign in to continue to Echoo.</p>
             </header>
 
-            <div className="echoo-login-mobile-preview">
-              <LoginLiveCard />
-            </div>
-
             <form
-              className="echoo-login-form"
+              className="echoo-broadcast-form"
               onSubmit={handleSubmit}
               noValidate
             >
-              <div className="echoo-login-field-group">
+              <div className="echoo-broadcast-field">
                 <label htmlFor="echoo-login-username">Username</label>
                 <div
-                  className={`echoo-login-input-shell ${
+                  className={`echoo-broadcast-input-shell ${
                     loginError ? "has-error" : ""
                   }`}
                 >
-                  <FaUser className="echoo-login-input-icon" aria-hidden="true" />
+                  <FaUser
+                    className="echoo-broadcast-input-icon"
+                    aria-hidden="true"
+                  />
                   <input
                     id="echoo-login-username"
                     type="text"
@@ -556,12 +397,12 @@ const Register = ({
                 </div>
               </div>
 
-              <div className="echoo-login-field-group">
-                <div className="echoo-login-field-row">
+              <div className="echoo-broadcast-field">
+                <div className="echoo-broadcast-field-row">
                   <label htmlFor="echoo-login-password">Password</label>
                   <button
                     type="button"
-                    className="echoo-login-forgot"
+                    className="echoo-broadcast-forgot"
                     onClick={() => {
                       setLoginError("");
                       setLoginNotice("");
@@ -573,12 +414,12 @@ const Register = ({
                 </div>
 
                 <div
-                  className={`echoo-login-input-shell ${
+                  className={`echoo-broadcast-input-shell ${
                     loginError ? "has-error" : ""
                   }`}
                 >
                   <FaLock
-                    className="echoo-login-input-icon"
+                    className="echoo-broadcast-input-icon"
                     aria-hidden="true"
                   />
                   <input
@@ -598,7 +439,7 @@ const Register = ({
 
                   <button
                     type="button"
-                    className="echoo-login-password-toggle"
+                    className="echoo-broadcast-password-toggle"
                     onClick={() =>
                       setShowPassword((previous) => !previous)
                     }
@@ -614,7 +455,7 @@ const Register = ({
                 {loginError && (
                   <p
                     id="echoo-login-error"
-                    className="echoo-login-error"
+                    className="echoo-broadcast-error"
                     role="alert"
                     aria-live="polite"
                   >
@@ -629,25 +470,25 @@ const Register = ({
                 loading={loading}
                 loadingText="Signing in..."
                 disabled={!formIsComplete()}
-                className="echoo-login-submit"
+                className="echoo-broadcast-submit"
               >
                 Sign in
               </LoadingButton>
 
               {loginNotice && (
-                <p className="echoo-login-notice" role="status">
+                <p className="echoo-broadcast-notice" role="status">
                   {loginNotice}
                 </p>
               )}
 
-              <div className="echoo-login-divider">
+              <div className="echoo-broadcast-divider">
                 <span>or continue with</span>
               </div>
 
-              <div className="echoo-login-socials">
+              <div className="echoo-broadcast-socials">
                 <button
                   type="button"
-                  className="echoo-login-social"
+                  className="echoo-broadcast-social"
                   onClick={() => showSocialNotice("Google")}
                 >
                   <FcGoogle aria-hidden="true" />
@@ -656,7 +497,7 @@ const Register = ({
 
                 <button
                   type="button"
-                  className="echoo-login-social"
+                  className="echoo-broadcast-social"
                   onClick={() => showSocialNotice("Apple")}
                 >
                   <FaApple aria-hidden="true" />
@@ -664,7 +505,7 @@ const Register = ({
                 </button>
               </div>
 
-              <p className="echoo-login-signup-prompt">
+              <p className="echoo-broadcast-signup">
                 New to Echoo?{" "}
                 <button type="button" onClick={switchToSignUp}>
                   Create account
