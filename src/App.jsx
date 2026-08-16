@@ -1,8 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
-
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -16,7 +12,6 @@ import ProfileSetup from "./Components/ProfileSetup/ProfileSetup";
 import ChooseRole from "./Components/ChooseRole/ChooseRole";
 import CreatorSetup from "./Components/CreatorSetup/CreatorSetup";
 import CreatorStudio from "./Components/CreatorStudio/CreatorStudio";
-
 import ListenerLayout from "./Components/ListenerLayout/ListenerLayout";
 import ListenerHome from "./Components/ListenerHome/ListenerHome";
 import ListenerSearch from "./Components/ListenerSearch/ListenerSearch";
@@ -27,334 +22,142 @@ import ListenerLibrary from "./Components/ListenerLibrary/ListenerLibrary";
 import ListenerFollowing from "./Components/ListenerLibrary/ListenerFollowing";
 import ListenerHistory from "./Components/ListenerHistory/ListenerHistoryConnected";
 import ListenerDownloads from "./Components/ListenerDownloads/ListenerDownloadsConnected";
-
 import {
-
   ListenerCreatorProfile,
   ListenerNotifications,
 } from "./Components/ListenerLiveExperience/ListenerLiveExperience";
-
 import ListenerRealLiveRoom from "./Components/ListenerLiveExperience/ListenerRealLiveRoom";
 import ListenerRealStationProfile from "./Components/ListenerLiveExperience/ListenerRealStationProfile";
 
 const getStoredUser = () => {
   try {
-    return JSON.parse(
-      localStorage.getItem("user") || "{}"
-    );
+    return JSON.parse(localStorage.getItem("user") || "{}");
   } catch {
     return {};
   }
 };
 
 const getStartingStage = () => {
-  const accessToken =
-    localStorage.getItem("accessToken");
+  const accessToken = localStorage.getItem("accessToken");
+  if (!accessToken) return "register";
 
-  if (!accessToken) {
-    return "register";
-  }
-
-  const user =
-    getStoredUser();
-
-  const role =
-    user.userType ||
-    localStorage.getItem("echooRole") ||
-    "";
-
+  const user = getStoredUser();
+  const role = user.userType || localStorage.getItem("echooRole") || "";
   const onboardingComplete =
-    Boolean(
-      user.onboardingCompleted
-    ) ||
-    localStorage.getItem(
-      "echooOnboardingCompleted"
-    ) === "true";
-
+    Boolean(user.onboardingCompleted) ||
+    localStorage.getItem("echooOnboardingCompleted") === "true";
   const profileComplete =
-    Boolean(
-      user.profileCompleted
-    ) ||
-    localStorage.getItem(
-      "echooProfileCompleted"
-    ) === "true";
+    Boolean(user.profileCompleted) ||
+    localStorage.getItem("echooProfileCompleted") === "true";
 
   if (onboardingComplete) {
-    if (
-      role === "creator"
-    ) {
-      return "creator-done";
-    }
-
-    return "listener-done";
+    return role === "creator" ? "creator-done" : "listener-done";
   }
 
-  if (!profileComplete) {
-    return "profile";
-  }
-
-  if (
-    role === "creator"
-  ) {
-    return "creator";
-  }
-
-  if (
-    role === "listener"
-  ) {
-    return "listener-done";
-  }
-
+  if (!profileComplete) return "profile";
+  if (role === "creator") return "creator";
+  if (role === "listener") return "listener-done";
   return "role";
 };
 
 const OnboardingFlow = () => {
-  const navigate =
-    useNavigate();
-
-  const [
-    stage,
-    setStage,
-  ] = useState(
-    getStartingStage
-  );
+  const navigate = useNavigate();
+  const [stage, setStage] = useState(getStartingStage);
 
   useEffect(() => {
-    if (
-      stage ===
-      "listener-done"
-    ) {
-      navigate(
-        "/listen",
-        {
-          replace: true,
-        }
-      );
+    if (stage === "listener-done") {
+      navigate("/listen", { replace: true });
     }
 
-    if (
-      stage ===
-      "creator-done"
-    ) {
-      navigate(
-        "/creator-studio",
-        {
-          replace: true,
-        }
-      );
+    if (stage === "creator-done") {
+      navigate("/creator-studio", { replace: true });
     }
-  }, [
-    stage,
-    navigate,
-  ]);
+  }, [stage, navigate]);
 
-  const handleAccountCreated =
-    () => {
-      setStage(
-        "profile"
-      );
-    };
+  const handleAccountCreated = () => setStage("profile");
 
-  const handleLoginSuccess =
-    (user) => {
-      const role =
-        user?.userType ||
-        localStorage.getItem(
-          "echooRole"
-        ) ||
-        "";
+  const handleLoginSuccess = (user) => {
+    const role = user?.userType || localStorage.getItem("echooRole") || "";
+    const onboardingComplete =
+      Boolean(user?.onboardingCompleted) ||
+      localStorage.getItem("echooOnboardingCompleted") === "true";
+    const profileComplete =
+      Boolean(user?.profileCompleted) ||
+      localStorage.getItem("echooProfileCompleted") === "true";
 
-      const onboardingComplete =
-        Boolean(
-          user?.onboardingCompleted
-        ) ||
-        localStorage.getItem(
-          "echooOnboardingCompleted"
-        ) === "true";
+    if (onboardingComplete) {
+      setStage(role === "creator" ? "creator-done" : "listener-done");
+      return;
+    }
 
-      const profileComplete =
-        Boolean(
-          user?.profileCompleted
-        ) ||
-        localStorage.getItem(
-          "echooProfileCompleted"
-        ) === "true";
+    if (!profileComplete) {
+      setStage("profile");
+      return;
+    }
 
-      if (
-        onboardingComplete
-      ) {
-        if (
-          role ===
-          "creator"
-        ) {
-          setStage(
-            "creator-done"
-          );
+    if (role === "creator") {
+      setStage("creator");
+      return;
+    }
 
-          return;
-        }
+    if (role === "listener") {
+      setStage("listener-done");
+      return;
+    }
 
-        setStage(
-          "listener-done"
-        );
+    setStage("role");
+  };
 
-        return;
-      }
+  const handleProfileCompleted = () => {
+    localStorage.setItem("echooProfileCompleted", "true");
+    setStage("role");
+  };
 
-      if (
-        !profileComplete
-      ) {
-        setStage(
-          "profile"
-        );
+  const handleListenerContinue = () => {
+    localStorage.setItem("echooRole", "listener");
+    localStorage.setItem("echooOnboardingCompleted", "true");
+    setStage("listener-done");
+  };
 
-        return;
-      }
+  const handleCreatorContinue = () => {
+    localStorage.setItem("echooRole", "creator");
+    setStage("creator");
+  };
 
-      if (
-        role ===
-        "creator"
-      ) {
-        setStage(
-          "creator"
-        );
+  const handleCreatorReady = () => {
+    localStorage.setItem("echooRole", "creator");
+    localStorage.setItem("echooOnboardingCompleted", "true");
+    setStage("creator-done");
+  };
 
-        return;
-      }
-
-      if (
-        role ===
-        "listener"
-      ) {
-        setStage(
-          "listener-done"
-        );
-
-        return;
-      }
-
-      setStage(
-        "role"
-      );
-    };
-
-  const handleProfileCompleted =
-    () => {
-      localStorage.setItem(
-        "echooProfileCompleted",
-        "true"
-      );
-
-      setStage(
-        "role"
-      );
-    };
-
-  const handleListenerContinue =
-    () => {
-      localStorage.setItem(
-        "echooRole",
-        "listener"
-      );
-
-      localStorage.setItem(
-        "echooOnboardingCompleted",
-        "true"
-      );
-
-      setStage(
-        "listener-done"
-      );
-    };
-
-  const handleCreatorContinue =
-    () => {
-      localStorage.setItem(
-        "echooRole",
-        "creator"
-      );
-
-      setStage(
-        "creator"
-      );
-    };
-
-  const handleCreatorReady =
-    () => {
-      localStorage.setItem(
-        "echooRole",
-        "creator"
-      );
-
-      localStorage.setItem(
-        "echooOnboardingCompleted",
-        "true"
-      );
-
-      setStage(
-        "creator-done"
-      );
-    };
-
-  if (
-    stage ===
-    "register"
-  ) {
+  if (stage === "register") {
     return (
       <Register
-        onAccountCreated={
-          handleAccountCreated
-        }
-        onLoginSuccess={
-          handleLoginSuccess
-        }
+        onAccountCreated={handleAccountCreated}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }
 
-  if (
-    stage ===
-    "profile"
-  ) {
-    return (
-      <ProfileSetup
-        onProfileCompleted={
-          handleProfileCompleted
-        }
-      />
-    );
+  if (stage === "profile") {
+    return <ProfileSetup onProfileCompleted={handleProfileCompleted} />;
   }
 
-  if (
-    stage ===
-    "role"
-  ) {
+  if (stage === "role") {
     return (
       <ChooseRole
-        onListenerContinue={
-          handleListenerContinue
-        }
-        onCreatorContinue={
-          handleCreatorContinue
-        }
+        onListenerContinue={handleListenerContinue}
+        onCreatorContinue={handleCreatorContinue}
+        onBackToProfile={() => setStage("profile")}
       />
     );
   }
 
-  if (
-    stage ===
-    "creator"
-  ) {
+  if (stage === "creator") {
     return (
       <CreatorSetup
-        onBackToRole={() =>
-          setStage(
-            "role"
-          )
-        }
-        onCreatorReady={
-          handleCreatorReady
-        }
+        onBackToRole={() => setStage("role")}
+        onCreatorReady={handleCreatorReady}
       />
     );
   }
@@ -362,243 +165,87 @@ const OnboardingFlow = () => {
   return null;
 };
 
-const RequireCompletedAccount = ({
-  children,
-}) => {
-  const accessToken =
-    localStorage.getItem(
-      "accessToken"
-    );
-
-  if (!accessToken) {
-    return (
-      <Navigate
-        to="/"
-        replace
-      />
-    );
-  }
+const RequireCompletedAccount = ({ children }) => {
+  const accessToken = localStorage.getItem("accessToken");
+  if (!accessToken) return <Navigate to="/" replace />;
 
   let user = {};
-
   try {
-    user =
-      JSON.parse(
-        localStorage.getItem(
-          "user"
-        ) ||
-          "{}"
-      );
+    user = JSON.parse(localStorage.getItem("user") || "{}");
   } catch {
     user = {};
   }
 
   const onboardingComplete =
-    Boolean(
-      user.onboardingCompleted
-    ) ||
-    localStorage.getItem(
-      "echooOnboardingCompleted"
-    ) ===
-      "true";
+    Boolean(user.onboardingCompleted) ||
+    localStorage.getItem("echooOnboardingCompleted") === "true";
 
-  if (
-    !onboardingComplete
-  ) {
-    return (
-      <Navigate
-        to="/"
-        replace
-      />
-    );
-  }
-
+  if (!onboardingComplete) return <Navigate to="/" replace />;
   return children;
 };
 
+const DefaultRedirect = () => {
+  const accessToken = localStorage.getItem("accessToken");
+  if (!accessToken) return <Navigate to="/" replace />;
 
-const DefaultRedirect =
-  () => {
-    const accessToken =
-      localStorage.getItem(
-        "accessToken"
-      );
+  const user = getStoredUser();
+  const role = user.userType || localStorage.getItem("echooRole");
 
-    if (!accessToken) {
-      return (
-        <Navigate
-          to="/"
-          replace
-        />
-      );
-    }
+  if (
+    role === "creator" &&
+    (user.onboardingCompleted ||
+      localStorage.getItem("echooOnboardingCompleted") === "true")
+  ) {
+    return <Navigate to="/creator-studio" replace />;
+  }
 
-    const user =
-      getStoredUser();
-
-    const role =
-      user.userType ||
-      localStorage.getItem(
-        "echooRole"
-      );
-
-    if (
-      role ===
-      "creator" &&
-      (
-        user.onboardingCompleted ||
-        localStorage.getItem(
-          "echooOnboardingCompleted"
-        ) === "true"
-      )
-    ) {
-      return (
-        <Navigate
-          to="/creator-studio"
-          replace
-        />
-      );
-    }
-
-    return (
-      <Navigate
-        to="/listen"
-        replace
-      />
-    );
-  };
+  return <Navigate to="/listen" replace />;
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <a
-        className="echoo-skip-to-content"
-        href="#echoo-main-content"
-      >
+      <a className="echoo-skip-to-content" href="#echoo-main-content">
         Skip to content
       </a>
 
-      <div
-        id="echoo-main-content"
-        tabIndex={-1}
-      >
+      <div id="echoo-main-content" tabIndex={-1}>
         <Routes>
-        <Route
-          path="/"
-          element={
-            <OnboardingFlow />
-          }
-        />
+          <Route path="/" element={<OnboardingFlow />} />
 
-        <Route
-          path="/creator-studio"
-          element={
-            <RequireCompletedAccount>
-              <CreatorStudio />
-            </RequireCompletedAccount>
-          }
-        />
-
-        <Route
-          path="/listen"
-          element={
-            <RequireCompletedAccount>
-              <ListenerLayout />
-            </RequireCompletedAccount>
-          }
-        >
           <Route
-            index
+            path="/creator-studio"
             element={
-              <ListenerHome />
+              <RequireCompletedAccount>
+                <CreatorStudio />
+              </RequireCompletedAccount>
             }
           />
 
           <Route
-            path="search"
+            path="/listen"
             element={
-              <ListenerSearch />
+              <RequireCompletedAccount>
+                <ListenerLayout />
+              </RequireCompletedAccount>
             }
-          />
+          >
+            <Route index element={<ListenerHome />} />
+            <Route path="search" element={<ListenerSearch />} />
+            <Route path="live" element={<ListenerLive />} />
+            <Route path="live/:broadcastId" element={<ListenerRealLiveRoom />} />
+            <Route path="stations" element={<ListenerStations />} />
+            <Route path="stations/:stationId" element={<ListenerRealStationProfile />} />
+            <Route path="library" element={<ListenerLibrary />} />
+            <Route path="library/following" element={<ListenerFollowing />} />
+            <Route path="history" element={<ListenerHistory />} />
+            <Route path="downloads" element={<ListenerDownloads />} />
+            <Route path="creator/:creatorId" element={<ListenerCreatorProfile />} />
+            <Route path="notifications" element={<ListenerNotifications />} />
+          </Route>
 
-          <Route
-            path="live"
-            element={
-              <ListenerLive />
-            }
-          />
-
-          <Route
-            path="live/:broadcastId"
-            element={
-              <ListenerRealLiveRoom />
-            }
-          />
-
-          <Route
-            path="stations"
-            element={
-              <ListenerStations />
-            }
-          />
-
-          <Route
-            path="stations/:stationId"
-            element={
-              <ListenerRealStationProfile />
-            }
-          />
-
-          <Route
-            path="library"
-            element={
-              <ListenerLibrary />
-            }
-          />
-
-          <Route
-            path="library/following"
-            element={
-              <ListenerFollowing />
-            }
-          />
-
-          <Route
-            path="history"
-            element={
-              <ListenerHistory />
-            }
-          />
-
-          <Route
-            path="downloads"
-            element={
-              <ListenerDownloads />
-            }
-          />
-
-          <Route
-            path="creator/:creatorId"
-            element={
-              <ListenerCreatorProfile />
-            }
-          />
-
-          <Route
-            path="notifications"
-            element={
-              <ListenerNotifications />
-            }
-          />
-        </Route>
-
-        <Route
-          path="*"
-          element={
-            <DefaultRedirect />
-          }
-        />
-      </Routes>
+          <Route path="*" element={<DefaultRedirect />} />
+        </Routes>
       </div>
     </BrowserRouter>
   );
