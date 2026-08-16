@@ -81,7 +81,10 @@ const ChooseRole = ({
 
           if (status.user) onboardingService.saveUser(status.user);
 
-          if (status.isOnboardingComplete === true && ["listener", "creator"].includes(userType)) {
+          if (
+            status.isOnboardingComplete === true &&
+            ["listener", "creator"].includes(userType)
+          ) {
             localStorage.setItem("echooRole", userType);
             setCompletedRole(userType);
             return;
@@ -106,7 +109,12 @@ const ChooseRole = ({
     const isListener = completedRole === "listener";
 
     return (
-      <div id="echoo-main-content" role="main" tabIndex="-1" className="role-page echoo-onboarding-page">
+      <div
+        id="echoo-main-content"
+        role="main"
+        tabIndex="-1"
+        className="role-page echoo-onboarding-page"
+      >
         <EchoAmbient density="low" className="echoo-onboarding-ambient" />
         <div className="role-container">
           <SuccessState
@@ -145,15 +153,25 @@ const ChooseRole = ({
 
       <OnboardingFrame step={3} hero="broadcast" panelClassName="eor-role-panel">
         <header className="eor-form-header">
-          <h1>Choose how you'll use <span>Echoo</span></h1>
-          <p>Pick the experience that matches what you want to do first. You can expand later.</p>
+          <h1>
+            Choose how you'll use <span>Echoo</span>
+          </h1>
+          <p>
+            Pick the experience that matches what you want to do first. You can
+            expand later.
+          </p>
         </header>
 
         <p className="eor-role-info">
-          This is only the first part of onboarding. More setup follows based on the role you choose.
+          This is only the first part of onboarding. More setup follows based on
+          the role you choose.
         </p>
 
-        <div className="eor-role-grid" role="radiogroup" aria-label="Choose how you will use Echoo">
+        <div
+          className="eor-role-grid"
+          role="radiogroup"
+          aria-label="Choose how you will use Echoo"
+        >
           {Object.entries(roleDetails).map(([role, details]) => {
             const { title, description, Icon, bullets } = details;
             const selected = selectedRole === role;
@@ -170,11 +188,16 @@ const ChooseRole = ({
               >
                 <span className="eor-role-radio" aria-hidden="true" />
                 <h2>{title}</h2>
-                <div className="eor-role-icon"><Icon aria-hidden="true" /></div>
+                <div className="eor-role-icon">
+                  <Icon aria-hidden="true" />
+                </div>
                 <p>{description}</p>
                 <ul className="eor-role-list">
                   {bullets.map((item) => (
-                    <li key={item}><FaCheck aria-hidden="true" /><span>{item}</span></li>
+                    <li key={item}>
+                      <FaCheck aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
                   ))}
                 </ul>
               </button>
@@ -183,7 +206,8 @@ const ChooseRole = ({
         </div>
 
         <p className="eor-tailor-note">
-          Echoo will tailor your next setup steps and features based on the role you choose.
+          Echoo will tailor your next setup steps and features based on the role
+          you choose.
         </p>
 
         <div className="eor-role-actions">
@@ -191,14 +215,18 @@ const ChooseRole = ({
             type="button"
             disabled={!selectedRole}
             loading={saving}
-            loadingText={selectedRole === "creator" ? "Setting up creator..." : "Preparing Echoo..."}
+            loadingText={
+              selectedRole === "creator"
+                ? "Setting up creator..."
+                : "Preparing Echoo..."
+            }
             className="eor-primary"
             onClick={handleContinue}
           >
             Continue
           </LoadingButton>
 
-          <div className="eor-action-row">
+          <div className="eor-action-row" style={{ gridTemplateColumns: "1fr" }}>
             <button
               type="button"
               className="eor-outline"
@@ -209,14 +237,6 @@ const ChooseRole = ({
               disabled={saving}
             >
               Back
-            </button>
-            <button
-              type="button"
-              className="eor-outline"
-              onClick={onStartOver}
-              disabled={saving || !onStartOver}
-            >
-              Start over
             </button>
           </div>
         </div>
