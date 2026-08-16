@@ -39,7 +39,6 @@ const ChooseRole = ({
   onListenerContinue,
   onCreatorContinue,
   onBackToProfile,
-  onStartOver,
 }) => {
   const [selectedRole, setSelectedRole] = useState("");
   const [saving, setSaving] = useState(false);
@@ -148,7 +147,12 @@ const ChooseRole = ({
         type={toast.type}
         title={toast.title}
         message={toast.message}
-        onClose={() => setToast((current) => ({ ...current, open: false }))}
+        onClose={() =>
+          setToast((current) => ({
+            ...current,
+            open: false,
+          }))
+        }
       />
 
       <OnboardingFrame step={3} hero="broadcast" panelClassName="eor-role-panel">
@@ -163,7 +167,7 @@ const ChooseRole = ({
         </header>
 
         <p className="eor-role-info">
-          This is only the first part of onboarding. More setup follows based on
+          This completes the basic account setup. More setup follows based on
           the role you choose.
         </p>
 
@@ -226,19 +230,14 @@ const ChooseRole = ({
             Continue
           </LoadingButton>
 
-          <div className="eor-action-row" style={{ gridTemplateColumns: "1fr" }}>
-            <button
-              type="button"
-              className="eor-outline"
-              onClick={() => {
-                if (onBackToProfile) onBackToProfile();
-                else onStartOver?.();
-              }}
-              disabled={saving}
-            >
-              Back
-            </button>
-          </div>
+          <button
+            type="button"
+            className="eor-outline eor-back-only"
+            onClick={onBackToProfile}
+            disabled={saving || !onBackToProfile}
+          >
+            Back to profile
+          </button>
         </div>
       </OnboardingFrame>
     </>
