@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   FaBroadcastTower,
   FaCheck,
@@ -9,34 +10,229 @@ import {
 } from "react-icons/fa";
 import echooLogo from "../Assets/logo.png";
 import "./onboarding-redesign.css";
+import "./onboarding-animation-fix.css";
 
 const steps = ["Account", "Profile", "Role"];
+const AUDIO_BAR_COUNT = 44;
 
-const AudioHero = () => (
-  <div className="eor-audio-card" aria-hidden="true">
-    <div className="eor-audio-topline">
-      <span className="eor-live-pill"><span /> LIVE</span>
-      <span className="eor-meter"><i /><i /><i /></span>
+const stopMediaStream = (stream) => {
+  stream?.getTracks?.().forEach((track) => track.stop());
+};
+
+const AudioHero = () => {
+  const barRefs = useRef([]);
+  const meterRefs = useRef([]);
+  const rafRef = useRef(0);
+  const streamRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const [micState, setMicState] = useState("idle");
+  const [message, setMessage] = useState("Tap the microphone to preview your audio");
+
+  useEffect(() => {
+    const frequencyData = new Uint8Array(128);
+
+    const animate = (time) => {
+      const analyser = analyserRef.current;
+
+      if (analyser) {
+        analyser.getByteFrequencyData(frequencyData);
+      }
+
+      barRefs.current.forEach((bar, index) => {
+        if (!bar) return;
+
+        let scale;
+        let opacity;
+
+        if (analyser) {
+          const bucket = Math.min(
+            frequencyData.length - 1,
+            Math.floor((index / AUDIO_BAR_COUNT) * frequencyData.length)
+          );
+          const level = frequencyData[bucket] / 255;
+          const neighbour = frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
+          const energy = Math.min(1, level * 0.72 + neighbour * 0.28);
+          scale = 0.48 + energy * 1.85;
+          opacity = 0.48 + energy * 0.52;
+        } else {
+          const waveOne = Math.sin(time * 0.004 + index * 0.43);
+          const waveTwo = Math.sin(time * 0.0027 - index * 0.19);
+          const energy = 0.5 + waveOne * 0.28 + waveTwo * 0.16;
+          scale = 0.68 + Math.abs(energy) * 0.58;
+          opacity = 0.58 + Math.abs(waveOne) * 0.36;
+        }
+
+        bar.style.transform = `scaleY(${scale.toFixed(3)})`;
+        bar.style.opacity = opacity.toFixed(3);
+      });
+
+      meterRefs.current.forEach((bar, index) => {
+        if (!bar) return;
+        const pulse = analyser
+          ? Math.max(0.45, frequencyData[(index + 1) * 9] / 255)
+          : 0.58 + Math.abs(Math.sin(time * 0.005 + index * 1.2)) * 0.5;
+        bar.style.transform = `scaleY(${pulse.toFixed(3)})`;
+      });
+
+      rafRef.current = window.requestAnimationFrame(animate);
+    };
+
+    rafRef.current = window.requestAnimationFrame(animate);
+
+    return () => {
+      window.cancelAnimationFrame(rafRef.current);
+      stopMediaStream(streamRef.current);
+      streamRef.current = null;
+      analyserRef.current = null;
+      audioContextRef.current?.close?.().catch?.(() => {});
+      audioContextRef.current = null;
+    };
+  }, []);
+
+  const disableMic = async () => {
+    stopMediaStream(streamRef.current);
+    streamRef.current = null;
+    analyserRef.current = null;
+
+    if (audioContextRef.current) {
+      await audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+
+    setMicState("idle");
+    setMessage("Tap the microphone to preview your audio");
+  };
+
+  const toggleMic = async () => {
+    if (micState === "active") {
+      await disableMic();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicState("unavailable");
+      setMessage("Microphone preview is unavailable on this browser");
+      return;
+    }
+
+    setMicState("requesting");
+    setMessage("Requesting microphone access…");
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: false,
+      });
+
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        stopMediaStream(stream);
+        throw new Error("AudioContext unavailable");
+      }
+
+      const audioContext = new AudioContext();
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.72;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      streamRef.current = stream;
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      setMicState("active");
+      setMessage("Mic preview active — audio stays on this device");
+    } catch (error) {
+      stopMediaStream(streamRef.current);
+      streamRef.current = null;
+      analyserRef.current = null;
+      audioContextRef.current?.close?.().catch?.(() => {});
+      audioContextRef.current = null;
+      setMicState(error?.name === "NotAllowedError" ? "denied" : "unavailable");
+      setMessage(
+        error?.name === "NotAllowedError"
+          ? "Microphone permission was not granted"
+          : "Microphone preview is unavailable on this browser"
+      );
+    }
+  };
+
+  const statusLabel =
+    micState === "active"
+      ? "MIC ACTIVE"
+      : micState === "requesting"
+      ? "REQUESTING"
+      : micState === "denied"
+      ? "MIC BLOCKED"
+      : micState === "unavailable"
+      ? "MIC UNAVAILABLE"
+      : "MIC PREVIEW";
+
+  return (
+    <div className={`eor-audio-card is-${micState}`}>
+      <div className="eor-audio-topline">
+        <span className="eor-live-pill">
+          <span /> {statusLabel}
+        </span>
+        <span className="eor-meter" aria-hidden="true">
+          {[0, 1, 2].map((index) => (
+            <i
+              key={index}
+              ref={(node) => {
+                meterRefs.current[index] = node;
+              }}
+            />
+          ))}
+        </span>
+      </div>
+
+      <div className="eor-wave-row" aria-hidden="true">
+        {Array.from({ length: AUDIO_BAR_COUNT }, (_, index) => (
+          <span
+            key={index}
+            ref={(node) => {
+              barRefs.current[index] = node;
+            }}
+            style={{
+              "--bar": `${22 + ((index * 17) % 52)}%`,
+            }}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className={`eor-mic-orb ${micState === "active" ? "is-active" : ""}`}
+        onClick={toggleMic}
+        disabled={micState === "requesting"}
+        aria-pressed={micState === "active"}
+        aria-label={micState === "active" ? "Turn off microphone preview" : "Preview microphone"}
+      >
+        <FaMicrophone aria-hidden="true" />
+      </button>
+
+      <div className="eor-audio-controls" aria-hidden="true">
+        <span><FaBroadcastTower /></span>
+        <span className="active"><FaMicrophone /></span>
+        <span><FaSlidersH /></span>
+      </div>
+
+      <p className={`eor-mic-caption is-${micState}`} aria-live="polite">
+        {message}
+      </p>
     </div>
-    <div className="eor-wave-row">
-      {Array.from({ length: 44 }, (_, index) => (
-        <span
-          key={index}
-          style={{
-            "--bar": `${22 + ((index * 17) % 52)}%`,
-            "--delay": `${(index % 9) * 0.07}s`,
-          }}
-        />
-      ))}
-      <div className="eor-mic-orb"><FaMicrophone /></div>
-    </div>
-    <div className="eor-audio-controls">
-      <span><FaBroadcastTower /></span>
-      <span className="active"><FaMicrophone /></span>
-      <span><FaSlidersH /></span>
-    </div>
-  </div>
-);
+  );
+};
 
 const ProfileHero = () => (
   <div className="eor-profile-hero-card" aria-hidden="true">
