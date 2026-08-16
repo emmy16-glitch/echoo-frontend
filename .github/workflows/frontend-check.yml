@@ -30,6 +30,7 @@ jobs:
         run: >-
           npx eslint
           src/Components/Register/register.jsx
+          src/Components/Register/BroadcastLoginVisual.jsx
           src/Components/Onboarding/OnboardingFrame.jsx
           src/Components/ProfileSetup/ProfileSetup.jsx
           src/Components/ChooseRole/ChooseRole.jsx
