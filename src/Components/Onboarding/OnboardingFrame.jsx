@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   FaBroadcastTower,
   FaCheck,
-  FaHeadphones,
   FaHeart,
   FaMicrophone,
   FaSlidersH,
@@ -11,6 +10,7 @@ import {
 import echooLogo from "../Assets/logo.png";
 import "./onboarding-redesign.css";
 import "./onboarding-animation-fix.css";
+import "./onboarding-layout-audit.css";
 
 const steps = ["Account", "Profile", "Role"];
 const AUDIO_BAR_COUNT = 44;
@@ -27,7 +27,9 @@ const AudioHero = () => {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const [micState, setMicState] = useState("idle");
-  const [message, setMessage] = useState("Tap the microphone to preview your audio");
+  const [message, setMessage] = useState(
+    "Tap the microphone to preview your audio"
+  );
 
   useEffect(() => {
     const frequencyData = new Uint8Array(128);
@@ -51,7 +53,8 @@ const AudioHero = () => {
             Math.floor((index / AUDIO_BAR_COUNT) * frequencyData.length)
           );
           const level = frequencyData[bucket] / 255;
-          const neighbour = frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
+          const neighbour =
+            frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
           const energy = Math.min(1, level * 0.72 + neighbour * 0.28);
           scale = 0.48 + energy * 1.85;
           opacity = 0.48 + energy * 0.52;
@@ -216,15 +219,25 @@ const AudioHero = () => {
         onClick={toggleMic}
         disabled={micState === "requesting"}
         aria-pressed={micState === "active"}
-        aria-label={micState === "active" ? "Turn off microphone preview" : "Preview microphone"}
+        aria-label={
+          micState === "active"
+            ? "Turn off microphone preview"
+            : "Preview microphone"
+        }
       >
         <FaMicrophone aria-hidden="true" />
       </button>
 
       <div className="eor-audio-controls" aria-hidden="true">
-        <span><FaBroadcastTower /></span>
-        <span className="active"><FaMicrophone /></span>
-        <span><FaSlidersH /></span>
+        <span>
+          <FaBroadcastTower />
+        </span>
+        <span className="active">
+          <FaMicrophone />
+        </span>
+        <span>
+          <FaSlidersH />
+        </span>
       </div>
 
       <p className={`eor-mic-caption is-${micState}`} aria-live="polite">
@@ -236,18 +249,31 @@ const AudioHero = () => {
 
 const ProfileHero = () => (
   <div className="eor-profile-hero-card" aria-hidden="true">
-    <div className="eor-profile-avatar"><span /></div>
+    <div className="eor-profile-avatar">
+      <span />
+    </div>
     <div className="eor-profile-lines">
-      <i /><i /><i />
+      <i />
+      <i />
+      <i />
     </div>
     <div className="eor-profile-wave">
       {Array.from({ length: 24 }, (_, index) => (
-        <span key={index} style={{ "--bar": `${18 + ((index * 23) % 58)}%` }} />
+        <span
+          key={index}
+          style={{ "--bar": `${18 + ((index * 23) % 58)}%` }}
+        />
       ))}
     </div>
-    <div className="eor-float-badge eor-people"><FaUserFriends /></div>
-    <div className="eor-float-badge eor-profile-mic"><FaMicrophone /></div>
-    <div className="eor-float-badge eor-heart"><FaHeart /></div>
+    <div className="eor-float-badge eor-people">
+      <FaUserFriends />
+    </div>
+    <div className="eor-float-badge eor-profile-mic">
+      <FaMicrophone />
+    </div>
+    <div className="eor-float-badge eor-heart">
+      <FaHeart />
+    </div>
   </div>
 );
 
@@ -270,13 +296,27 @@ const OnboardingFrame = ({
         <div className="eor-hero-copy">
           {isProfile ? (
             <>
-              <h1>Your <em>voice.</em><br />Your <em>identity.</em></h1>
-              <p>Build your profile so others can discover, connect, and listen. Be authentic. Be you.</p>
+              <h1>
+                Your <em>voice.</em>
+                <br />
+                Your <em>identity.</em>
+              </h1>
+              <p>
+                Build your profile so others can discover, connect, and listen.
+                Be authentic. Be you.
+              </p>
             </>
           ) : (
             <>
-              <h1>Broadcast<br />your <em>voice.</em></h1>
-              <p>Go live. Share your message. Inspire your audience. All in one beautiful platform built for audio.</p>
+              <h1>
+                Broadcast
+                <br />
+                your <em>voice.</em>
+              </h1>
+              <p>
+                Go live. Share your message. Inspire your audience. All in one
+                beautiful platform built for audio.
+              </p>
             </>
           )}
         </div>
@@ -287,20 +327,36 @@ const OnboardingFrame = ({
       <section className="eor-form-side">
         <div className={`eor-panel ${panelClassName}`}>
           <div className="eor-mobile-brand">
-            <div className="eor-mobile-logo"><img src={echooLogo} alt="" aria-hidden="true" /><strong>Echoo</strong></div>
-            <span>Step {step} of 3</span>
+            <div className="eor-mobile-logo">
+              <img src={echooLogo} alt="" aria-hidden="true" />
+              <strong>Echoo</strong>
+            </div>
+            <span>Basics · {step}/3</span>
           </div>
 
-          <div className="eor-stepper" aria-label={`Step ${step} of 3`}>
+          <div
+            className="eor-stepper"
+            aria-label={`Basics step ${step} of 3`}
+          >
             {steps.map((label, index) => {
               const number = index + 1;
               const complete = number < step;
               const current = number === step;
+
               return (
-                <div className={`eor-step ${complete ? "complete" : ""} ${current ? "current" : ""}`} key={label}>
-                  <span className="eor-step-circle">{complete ? <FaCheck /> : number}</span>
+                <div
+                  className={`eor-step ${complete ? "complete" : ""} ${
+                    current ? "current" : ""
+                  }`}
+                  key={label}
+                >
+                  <span className="eor-step-circle">
+                    {complete ? <FaCheck /> : number}
+                  </span>
                   <span className="eor-step-label">{label}</span>
-                  {index < steps.length - 1 && <span className="eor-step-line" />}
+                  {index < steps.length - 1 && (
+                    <span className="eor-step-line" />
+                  )}
                 </div>
               );
             })}
