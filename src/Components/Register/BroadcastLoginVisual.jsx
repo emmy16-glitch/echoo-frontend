@@ -27,11 +27,8 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
 
   useEffect(() => {
     const frequencyData = new Uint8Array(128);
-    const reducedMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)"
-    )?.matches;
 
-    const animate = (time = 0) => {
+    const animate = (time) => {
       const analyser = analyserRef.current;
 
       if (analyser) {
@@ -53,17 +50,12 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
           const neighbour =
             frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
           const energy = Math.min(1, level * 0.72 + neighbour * 0.28);
-
           scale = 0.48 + energy * 1.85;
           opacity = 0.48 + energy * 0.52;
-        } else if (reducedMotion) {
-          scale = 0.92;
-          opacity = 0.78;
         } else {
           const waveOne = Math.sin(time * 0.004 + index * 0.43);
           const waveTwo = Math.sin(time * 0.0027 - index * 0.19);
           const energy = 0.5 + waveOne * 0.28 + waveTwo * 0.16;
-
           scale = 0.68 + Math.abs(energy) * 0.58;
           opacity = 0.58 + Math.abs(waveOne) * 0.36;
         }
@@ -74,13 +66,9 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
 
       meterRefs.current.forEach((bar, index) => {
         if (!bar) return;
-
         const pulse = analyser
           ? Math.max(0.45, frequencyData[(index + 1) * 9] / 255)
-          : reducedMotion
-          ? 0.8
           : 0.58 + Math.abs(Math.sin(time * 0.005 + index * 1.2)) * 0.5;
-
         bar.style.transform = `scaleY(${pulse.toFixed(3)})`;
       });
 
