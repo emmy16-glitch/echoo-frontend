@@ -14,131 +14,82 @@ const stopStream = (stream) => {
 };
 
 const BroadcastLoginVisual = ({ logoSrc }) => {
-  const canvasRef = useRef(null);
+  const barRefs = useRef([]);
+  const meterRefs = useRef([]);
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const rafRef = useRef(0);
-  const hoverRef = useRef(false);
   const [micState, setMicState] = useState("idle");
   const [message, setMessage] = useState(
     "Tap the mic to preview your microphone"
   );
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const ctx = canvas.getContext("2d");
+    const frequencyData = new Uint8Array(128);
     const reducedMotion = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)"
     )?.matches;
-    const frequencyData = new Uint8Array(128);
-    let levelEnvelope = 0;
 
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
-      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    };
-
-    const draw = (time = 0) => {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      const centerY = height / 2;
+    const animate = (time = 0) => {
       const analyser = analyserRef.current;
-
-      ctx.clearRect(0, 0, width, height);
-
-      const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      gradient.addColorStop(0, "rgba(107, 167, 244, 0.58)");
-      gradient.addColorStop(0.2, "rgba(92, 157, 241, 0.84)");
-      gradient.addColorStop(0.5, "rgba(23, 105, 211, 0.98)");
-      gradient.addColorStop(0.8, "rgba(92, 157, 241, 0.84)");
-      gradient.addColorStop(1, "rgba(107, 167, 244, 0.58)");
 
       if (analyser) {
         analyser.getByteFrequencyData(frequencyData);
-        let total = 0;
-        for (let i = 0; i < frequencyData.length; i += 1) {
-          total += frequencyData[i] / 255;
-        }
-        const average = total / frequencyData.length;
-        levelEnvelope = levelEnvelope * 0.72 + average * 0.28;
-      } else {
-        levelEnvelope *= 0.9;
       }
 
-      const gap = width < 430 ? 3.2 : 4.4;
-      const barWidth = Math.max(
-        width < 430 ? 4.5 : 6,
-        (width - gap * (BAR_COUNT - 1)) / BAR_COUNT
-      );
-      const maxHeight = height * 0.88;
-      const hoverBoost = hoverRef.current ? 1.05 : 1;
+      barRefs.current.forEach((bar, index) => {
+        if (!bar) return;
 
-      for (let i = 0; i < BAR_COUNT; i += 1) {
-        const x = i * (barWidth + gap);
-        const edgeFade = Math.sin(((i + 1) / (BAR_COUNT + 1)) * Math.PI);
-        let amplitude;
+        let scale;
+        let opacity;
 
         if (analyser) {
           const bucket = Math.min(
             frequencyData.length - 1,
-            Math.floor((i / BAR_COUNT) * frequencyData.length)
+            Math.floor((index / BAR_COUNT) * frequencyData.length)
           );
           const level = frequencyData[bucket] / 255;
           const neighbour =
             frequencyData[Math.min(bucket + 2, frequencyData.length - 1)] / 255;
-          const energy = Math.min(
-            1,
-            level * 0.7 + neighbour * 0.3 + levelEnvelope * 0.55
-          );
-          amplitude = 0.22 + energy * 0.95;
+          const energy = Math.min(1, level * 0.72 + neighbour * 0.28);
+
+          scale = 0.48 + energy * 1.85;
+          opacity = 0.48 + energy * 0.52;
         } else if (reducedMotion) {
-          amplitude = 0.48 + Math.sin(i * 0.44) * 0.08;
+          scale = 0.92;
+          opacity = 0.78;
         } else {
-          const waveA = Math.sin(time * 0.0042 + i * 0.43);
-          const waveB = Math.sin(time * 0.0026 - i * 0.21);
-          const waveC = Math.sin(time * 0.0015 + i * 0.11);
-          amplitude =
-            0.34 +
-            Math.abs(waveA) * 0.42 +
-            Math.abs(waveB) * 0.2 +
-            Math.abs(waveC) * 0.1;
+          const waveOne = Math.sin(time * 0.004 + index * 0.43);
+          const waveTwo = Math.sin(time * 0.0027 - index * 0.19);
+          const energy = 0.5 + waveOne * 0.28 + waveTwo * 0.16;
+
+          scale = 0.68 + Math.abs(energy) * 0.58;
+          opacity = 0.58 + Math.abs(waveOne) * 0.36;
         }
 
-        const shape = 0.72 + edgeFade * 0.28;
-        const barHeight = Math.max(
-          12,
-          Math.min(maxHeight, maxHeight * amplitude * shape * hoverBoost)
-        );
-        const y = centerY - barHeight / 2;
+        bar.style.transform = `scaleY(${scale.toFixed(3)})`;
+        bar.style.opacity = opacity.toFixed(3);
+      });
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(
-          x,
-          y,
-          barWidth,
-          barHeight,
-          Math.min(barWidth / 2, 7)
-        );
-        ctx.fill();
-      }
+      meterRefs.current.forEach((bar, index) => {
+        if (!bar) return;
 
-      rafRef.current = window.requestAnimationFrame(draw);
+        const pulse = analyser
+          ? Math.max(0.45, frequencyData[(index + 1) * 9] / 255)
+          : reducedMotion
+          ? 0.8
+          : 0.58 + Math.abs(Math.sin(time * 0.005 + index * 1.2)) * 0.5;
+
+        bar.style.transform = `scaleY(${pulse.toFixed(3)})`;
+      });
+
+      rafRef.current = window.requestAnimationFrame(animate);
     };
 
-    resize();
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(canvas);
-    rafRef.current = window.requestAnimationFrame(draw);
+    rafRef.current = window.requestAnimationFrame(animate);
 
     return () => {
-      resizeObserver.disconnect();
       window.cancelAnimationFrame(rafRef.current);
       stopStream(streamRef.current);
       streamRef.current = null;
@@ -200,7 +151,7 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
 
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.68;
+      analyser.smoothingTimeConstant = 0.72;
 
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
@@ -256,15 +207,7 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
         </p>
       </div>
 
-      <div
-        className={`echoo-audio-preview is-${micState}`}
-        onPointerEnter={() => {
-          hoverRef.current = true;
-        }}
-        onPointerLeave={() => {
-          hoverRef.current = false;
-        }}
-      >
+      <div className={`echoo-audio-preview is-${micState}`}>
         <div className="echoo-audio-preview-topline">
           <span className="echoo-audio-preview-status">
             <span className="echoo-audio-preview-dot" />
@@ -272,18 +215,31 @@ const BroadcastLoginVisual = ({ logoSrc }) => {
           </span>
 
           <div className="echoo-audio-preview-meter" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+            {[0, 1, 2].map((index) => (
+              <span
+                key={index}
+                ref={(node) => {
+                  meterRefs.current[index] = node;
+                }}
+              />
+            ))}
           </div>
         </div>
 
         <div className="echoo-audio-preview-stage">
-          <canvas
-            ref={canvasRef}
-            className="echoo-audio-wave-canvas"
-            aria-hidden="true"
-          />
+          <div className="echoo-login-wave-bars" aria-hidden="true">
+            {Array.from({ length: BAR_COUNT }, (_, index) => (
+              <span
+                key={index}
+                ref={(node) => {
+                  barRefs.current[index] = node;
+                }}
+                style={{
+                  "--bar": `${22 + ((index * 17) % 52)}%`,
+                }}
+              />
+            ))}
+          </div>
 
           <button
             type="button"
