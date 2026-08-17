@@ -12,8 +12,9 @@ import "./onboarding-redesign.css";
 import "./onboarding-animation-fix.css";
 import "./onboarding-layout-audit.css";
 
-const steps = ["Account", "Profile", "Role"];
+const BASIC_STEPS = ["Account", "Profile", "Role"];
 const AUDIO_BAR_COUNT = 44;
+const PROFILE_BAR_COUNT = 24;
 
 const stopMediaStream = (stream) => {
   stream?.getTracks?.().forEach((track) => track.stop());
@@ -206,9 +207,7 @@ const AudioHero = () => {
             ref={(node) => {
               barRefs.current[index] = node;
             }}
-            style={{
-              "--bar": `${22 + ((index * 17) % 52)}%`,
-            }}
+            style={{ "--bar": `${22 + ((index * 17) % 52)}%` }}
           />
         ))}
       </div>
@@ -229,15 +228,9 @@ const AudioHero = () => {
       </button>
 
       <div className="eor-audio-controls" aria-hidden="true">
-        <span>
-          <FaBroadcastTower />
-        </span>
-        <span className="active">
-          <FaMicrophone />
-        </span>
-        <span>
-          <FaSlidersH />
-        </span>
+        <span><FaBroadcastTower /></span>
+        <span className="active"><FaMicrophone /></span>
+        <span><FaSlidersH /></span>
       </div>
 
       <p className={`eor-mic-caption is-${micState}`} aria-live="polite">
@@ -247,43 +240,70 @@ const AudioHero = () => {
   );
 };
 
-const ProfileHero = () => (
-  <div className="eor-profile-hero-card" aria-hidden="true">
-    <div className="eor-profile-avatar">
-      <span />
+const ProfileHero = () => {
+  const barRefs = useRef([]);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const animate = (time = 0) => {
+      barRefs.current.forEach((bar, index) => {
+        if (!bar) return;
+
+        const waveOne = Math.sin(time * 0.0042 + index * 0.48);
+        const waveTwo = Math.sin(time * 0.0024 - index * 0.24);
+        const waveThree = Math.sin(time * 0.0013 + index * 0.13);
+        const energy =
+          0.46 +
+          Math.abs(waveOne) * 0.34 +
+          Math.abs(waveTwo) * 0.2 +
+          Math.abs(waveThree) * 0.1;
+
+        const scale = 0.62 + energy * 0.58;
+        const opacity = 0.56 + Math.abs(waveOne) * 0.35;
+        bar.style.transform = `scaleY(${scale.toFixed(3)})`;
+        bar.style.opacity = opacity.toFixed(3);
+      });
+
+      rafRef.current = window.requestAnimationFrame(animate);
+    };
+
+    rafRef.current = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <div className="eor-profile-hero-card" aria-hidden="true">
+      <div className="eor-profile-avatar"><span /></div>
+      <div className="eor-profile-lines"><i /><i /><i /></div>
+      <div className="eor-profile-wave">
+        {Array.from({ length: PROFILE_BAR_COUNT }, (_, index) => (
+          <span
+            key={index}
+            ref={(node) => {
+              barRefs.current[index] = node;
+            }}
+            style={{ "--bar": `${18 + ((index * 23) % 58)}%` }}
+          />
+        ))}
+      </div>
+      <div className="eor-float-badge eor-people"><FaUserFriends /></div>
+      <div className="eor-float-badge eor-profile-mic"><FaMicrophone /></div>
+      <div className="eor-float-badge eor-heart"><FaHeart /></div>
     </div>
-    <div className="eor-profile-lines">
-      <i />
-      <i />
-      <i />
-    </div>
-    <div className="eor-profile-wave">
-      {Array.from({ length: 24 }, (_, index) => (
-        <span
-          key={index}
-          style={{ "--bar": `${18 + ((index * 23) % 58)}%` }}
-        />
-      ))}
-    </div>
-    <div className="eor-float-badge eor-people">
-      <FaUserFriends />
-    </div>
-    <div className="eor-float-badge eor-profile-mic">
-      <FaMicrophone />
-    </div>
-    <div className="eor-float-badge eor-heart">
-      <FaHeart />
-    </div>
-  </div>
-);
+  );
+};
 
 const OnboardingFrame = ({
   step,
   hero = "broadcast",
   children,
   panelClassName = "",
+  steps: stepLabels = BASIC_STEPS,
+  phaseLabel = "Basics",
 }) => {
   const isProfile = hero === "profile";
+  const isCreator = hero === "creator";
+  const totalSteps = stepLabels.length;
 
   return (
     <main className={`echoo-onboarding-redesign eor-step-${step}`}>
@@ -304,6 +324,18 @@ const OnboardingFrame = ({
               <p>
                 Build your profile so others can discover, connect, and listen.
                 Be authentic. Be you.
+              </p>
+            </>
+          ) : isCreator ? (
+            <>
+              <h1>
+                Build your
+                <br />
+                <em>creator</em> identity.
+              </h1>
+              <p>
+                Shape how you show up on Echoo, then launch your first station,
+                schedule a broadcast, or go live.
               </p>
             </>
           ) : (
@@ -331,14 +363,15 @@ const OnboardingFrame = ({
               <img src={echooLogo} alt="" aria-hidden="true" />
               <strong>Echoo</strong>
             </div>
-            <span>Basics · {step}/3</span>
+            <span>{phaseLabel} · {step}/{totalSteps}</span>
           </div>
 
           <div
             className="eor-stepper"
-            aria-label={`Basics step ${step} of 3`}
+            aria-label={`${phaseLabel} step ${step} of ${totalSteps}`}
+            style={{ gridTemplateColumns: `repeat(${totalSteps}, minmax(0, 1fr))` }}
           >
-            {steps.map((label, index) => {
+            {stepLabels.map((label, index) => {
               const number = index + 1;
               const complete = number < step;
               const current = number === step;
@@ -354,7 +387,7 @@ const OnboardingFrame = ({
                     {complete ? <FaCheck /> : number}
                   </span>
                   <span className="eor-step-label">{label}</span>
-                  {index < steps.length - 1 && (
+                  {index < stepLabels.length - 1 && (
                     <span className="eor-step-line" />
                   )}
                 </div>
