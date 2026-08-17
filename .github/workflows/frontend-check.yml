@@ -34,6 +34,7 @@ jobs:
           src/Components/Onboarding/OnboardingFrame.jsx
           src/Components/ProfileSetup/ProfileSetup.jsx
           src/Components/ChooseRole/ChooseRole.jsx
+          src/Components/CreatorSetup/CreatorSetup.jsx
 
       - name: Build application
         run: npm run build

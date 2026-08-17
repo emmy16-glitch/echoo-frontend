@@ -1,4 +1,5 @@
-.eor-wave-row > span {
+.eor-wave-row > span,
+.eor-profile-wave > span {
   animation: none !important;
   transform-origin: center;
   will-change: transform, opacity;
