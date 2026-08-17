@@ -1147,3 +1147,120 @@ button:not(.primary):hover {
       1fr;
   }
 }
+
+/* ==========================================================
+   CREATOR ACCOUNT / LOGOUT ACCESS
+========================================================== */
+
+#root .studio-sidebar {
+  overflow-y: auto !important;
+  scrollbar-width: none;
+}
+
+#root .studio-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+#root .studio-sidebar-profile {
+  width: 48px !important;
+  height: auto !important;
+  min-height: 84px !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 38px 38px !important;
+  place-items: center !important;
+  gap: 6px !important;
+  overflow: visible !important;
+}
+
+#root .studio-sidebar-logout {
+  position: relative !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid var(--echoo-border) !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  color: var(--echoo-text-secondary) !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease !important;
+}
+
+#root .studio-sidebar-logout:hover,
+#root .studio-sidebar-logout:focus-visible {
+  border-color: #F5C2C0 !important;
+  background: #FFF4F3 !important;
+  color: #B42318 !important;
+  outline: none !important;
+}
+
+#root .studio-sidebar-logout > span {
+  position: absolute !important;
+  z-index: 1800 !important;
+  left: 48px !important;
+  top: 50% !important;
+  transform: translate(-5px, -50%) !important;
+  min-width: max-content !important;
+  padding: 7px 10px !important;
+  border: 1px solid var(--echoo-border) !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  color: #B42318 !important;
+  box-shadow: var(--echoo-shadow-popover) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  white-space: nowrap !important;
+  transition: opacity 140ms ease, transform 140ms ease !important;
+}
+
+#root .studio-sidebar-logout:hover > span,
+#root .studio-sidebar-logout:focus-visible > span {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translate(0, -50%) !important;
+}
+
+@media (max-height: 720px) {
+  #root .studio-sidebar {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  #root .studio-brand {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  #root .studio-logo {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  #root .studio-navigation {
+    gap: 2px !important;
+    margin-top: 12px !important;
+  }
+
+  #root .studio-nav-item {
+    height: 40px !important;
+    min-height: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  #root .studio-sidebar-profile {
+    min-height: 74px !important;
+    grid-template-rows: 34px 34px !important;
+    gap: 4px !important;
+  }
+
+  #root .sidebar-avatar,
+  #root .studio-sidebar-logout {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
